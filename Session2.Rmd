@@ -1,0 +1,264 @@
+---
+title: 'Session 2: Data Understanding'
+output: html_document
+date: "2023-01-11"
+editor_options: 
+  markdown: 
+    wrap: 72
+always_allow_html: true    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Required packages
+#install.packages("plotly")
+
+```
+
+# Data Understanding: Descriptive Analyses and Charts
+
+## Data Quality
+
+Before performing hypothesis testing, multivariate models etc. it is important to check the **data quality**:   
+
+- Are there any outliers? 
+- Are there any unplausible values? 
+- Are there missing values? 
+- Of what kind is the distribution of the single variables? 
+- ... 
+   
+
+
+## Built-in functions: `summary()` and `str()`
+
+R provides two very helpful built-in functions: `str()` and `summary`,
+which should be applied to a new dataset directly after importing it.
+
+Import the dataset (please note: new RMarkdown document --\> need to
+import the dataset again)
+
+```{r URL}
+# Assign URL of data into object URL
+URL <- "https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv"
+# and import the dataset
+
+```
+
+First check of the data using the `str()` function.
+
+```{r}
+
+```
+
+Here, you can see that the `ElectricVehicleData` object is a
+`data.frame` and that we have 103 observations (rows) and 14 variables
+(columns). You can see the name of the variables and the storage types
+(like `chr`, `num` or `int`). Also, a few values (cells) are shown.
+
+Next, we can request some basic statistical paramater applying the
+`summary()` function:
+
+```{r}
+
+```
+
+The `summary()` function provides - based on the storage type - some
+basic statistical parameters.
+
+### A note about storage types and measurement levels
+
+Storage types (like num, int, char etc.) and not directly related to
+measurement levels (Stevens, 1946):     
+   
+- `num` and `int` could be related to measurement levels `ratio` and `interval` 
+- If an `int` variable
+represents a Likert-scale, then it is related to `ordinal` measurement
+level 
+- `char` is typically related to `nominal` scaled variables (but
+an `int` variable can be used as well) 
+- There are two special types,
+called `factor` and `ordered`. `ordered` represents an ordered
+categorical variable, an `ordinal` scaled variable, while `factor`
+typically represents an unordered categorical variable, a `nominal`
+scaled variable.
+    
+    
+Especially with **ordinal scaled** variables, it is often necessary to
+perform some transformations before an arithmetic mean can be
+calculated. Please note that an arithmetic mean shouldn't be calculated
+for a ordinal scaled variable, but nevertheless, this is what happens in
+reality...
+
+   
+   
+### Exercises: Built-in functions, Missing Values
+
+- Please import the diamonds dataset, https://raw.githubusercontent.com/tidyverse/ggplot2/main/data-raw/diamonds.csv
+- Please inspect the dataset using:
+  - `str()` - which parameters are shown?
+  - `summary()`- which parameters are printed out depending on what?
+  - RStudio (upper right pane, look for the object) and `View()` 
+  - `head()` - change the number of rows to 10
+  - `tail()`
+- Apply the `summary()` function on the `airquality` dataset. Check the help page for the `airquality` first. What is special about the variables `Ozone` and `Solar.R`?
+
+
+```{r}
+
+```
+   
+
+  
+
+## Charts
+
+There are several ways how to get visualizations in R:   
+   
+   
+- Built-in charts 
+- Additional packages, like ggplot2 
+- Interactive charts with plotly
+- ...
+  
+
+
+### Built-in charts
+
+Built-in charts can be used during the data analysis process to get
+insights about the data.
+   
+   
+#### Barplot
+
+A barplot in R is based on a frequency table of a variable. A frequency
+table can be generated using `table()` function.
+
+```{r}
+# Distribution of PlugType
+
+
+
+```
+   
+   
+#### Boxplot
+
+A boxplot can be drawn for measurement levels `ordinal`, `interval` and
+`ratio`.
+
+```{r}
+
+```
+    
+    
+#### Histogram and Density Plots
+
+A histogram can be drawn for measurement levels `interval` and `ratio`
+
+```{r}
+
+```
+
+Together with a density plot
+
+```{r}
+
+
+```
+   
+       
+#### Multiple plots side-by-side  
+  
+Two boxplots side-by-side. Please note that this works in the output
+html-document, it will displayed here slightly different.
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+
+
+```
+
+### Interactive charts can be requested with `plotly`.
+
+We can request interactive charts as well, using `plotly` for example.
+
+Interactive scatterplot with plotly:
+
+```{r}
+
+
+```
+   
+   
+   
+### Exercises: Charts
+    
+    
+- Generate a barplot, a boxplot and a histogram (with density plot overlayed) for a variable of your choice in the electric vehicles data.frame.   
+
+- Generate an interactive chart with plotly between two variables of your choice in electric vehicles dataset or in diamonds dataset.
+   
+   
+```{r}
+
+```
+
+   
+   
+## Descriptives
+
+It is simple to generate classical descriptive parameters in R for
+variables. Typical functions are `min()`, `max()`, `median()`, `mean()`,
+`sd()` etc.
+
+Simple example:
+
+```{r}
+
+```
+
+But how to get more statistical parameter for more variables at once?
+
+First, we can use a named vector to put the different statistical
+parameters in.
+
+```{r}
+
+
+
+
+```
+
+Second, we can put this into a function in R to apply it to any variable
+
+```{r}
+
+
+
+
+
+```
+
+Third, we can use a loop to apply out function to a set of variables
+
+```{r}
+
+```
+
+Of course, wen can store the result into a data.frame, transpose it (if
+you want to switch rows and columns) and export it in MS Excel format.
+   
+   
+## Exercise: Data Understanding: Descriptive Analyses
+
+- Calculate the arithmetic mean, the standard deviation and minimum/maximum for `Ozone` and `Solar.R` (`airqualiy` data.frame). What is the output and why? How to get a numerical result? Check the help page for more information.
+- Set up your own function with parameters Min / Max / Median / Mean and Standard Deviation
+- Apply the function to a few variables in the diamonds dataset   
+   
+```{r}
+
+```
+
+

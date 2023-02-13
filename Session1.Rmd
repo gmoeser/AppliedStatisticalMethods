@@ -1,0 +1,268 @@
+---
+title: 'Session 1: Organization, Introduction to R, Data Import'
+output: html_document
+date: "2023-01-11"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Organization
+
+## Ressources
+
+- R Markdown notebooks are located here <https://github.com/gmoeser> - please download first.
+- There are 6 R Markdown notebooks, one for each session. This is the first one.
+- Dataset is located here: <https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv>
+   
+   
+## References: 
+- R Graphics Cookbook: <https://r-graphics.org/recipe-quick-line>
+- R Practice: https://bookdown.org/logan_kelly/r_practice/p09.html
+   
+   
+## Some notes about R Markdown notebooks
+
+R Markdown notebooks are organized along two kinds of sections:
+
+- Markdown sections (like this one) and
+- Code chunks (or sections) which support several programming languages, like R, Python, SQL etc.
+- Notebooks can be knitted into MS Word, HTML or other supported formats. Just press the blue knit-button.
+   
+   
+## Code chunks
+   
+...start with three back ticks and the programming language in curly brackets, see the example. Code chunks can be run with the *green play-button* on the left.
+   
+```{r ExampleRCodeChunk}
+
+```
+   
+   
+## Exercise: R, RStudio, RMarkdown
+
+- [if not already done] Please download and install R, latest version
+- [if not already done] Please download and install RStudio, latest version
+- Please note: both software package are available as open source!
+- Please download the two RMarkdown documents 
+- Open both RMarkdown documents in RStudio
+- Try to *knit* the first RMarkdown document (Session1.Rmd) into a html-document
+- Add a code chunk in the document 
+   
+   
+**Please note:** ipads are currently not supported, if running an ipad (or an Android pad), please go to https://posit.cloud. Currently, I cannot offer any support here!
+   
+
+
+# Introduction to R
+
+## R is a vector oriented - statistical - programming language
+
+R is a vector oriented language: all operations will be performed on the
+whole vector at once. It is not necessary to loop over each element in a
+vector and perform - if a certain condition is fullfilled - a certain
+action.
+
+```{r IntroductionToR}
+# Generate a small vector
+
+# Perform an operation on the vector: multiply each element by 2
+
+```
+
+You can see that each element in vector `MyFirstVectorInR` was
+multiplied by value 2. No need for any loops or `if`-clauses. You could
+also see how a vector was set up: use the `c()` function and assign `<-`
+it to an object, here like `MyFirstVectorInR`. Normally, it is not
+necessary to set up vectors manually. Data will be imported using a
+function like `read.table()`.
+
+## Everything is an object!
+
+In R, we can store everything into an object using the assignment
+operator: `<-` To access an object, just enter its name on the console.
+
+```{r}
+
+# Access the object
+
+```
+
+## Help
+
+R has a built-in help system.
+
+```{r}
+# usage of the built-in help system
+
+# faster
+
+```
+
+Another very important ressource is Stack Overflow:
+<https://stackoverflow.com/questions/tagged/r>
+
+In RStudio, in the lower right pane, a **Help tab** is available. Here,
+a search function is available.
+
+## Packages
+
+A lot of additional R packages are available.
+
+```{r}
+# Currently installed packages
+
+```
+
+Install a package either using the `install.packages()` function or use
+the RStudio interface, which can be found in tab `Packages` in the
+lower-right pane in RStudio.
+
+```{r}
+# Install a package: lm.beta
+
+```
+
+After a package was successfully installed, the whole package can be
+loaded using `library()` function or single functions can be used using
+the package name followed by two colons -
+`packageName::functionName()` - followed by the functions name, see
+example below.
+
+```{r}
+# Load thw complete package
+
+```
+
+Use only a single function from a package:
+
+```{r}
+# Use only a single function to get the standardized regression coefficient from a simple linear regression
+
+```
+
+## Exercises: Introduction to R
+
+1.  What is the function to calculate the standard deviation? Play
+    around with the examples of the help file.
+2.  How to generate a boxplot? Play around with the examples of the help
+    file.
+3.  What is `CRAN`?
+4.  How many official packages are currently available on CRAN?
+5.  Please install the `psych` and `Hmisc` packages. Try to get an
+    overview of both packages. See, if there is are so called
+    `vignettes` available. Try to find also out what a `Vignette` is.
+6.  Load the `psych` package
+7.  Use the `describe()` function in `Hmisc` package to get some
+    information about the `mtcars` dataset. First, open the help page of
+    the `mtcars` dataset. It is not necessary to import the `mtcars`
+    dataset, it is already available. Why?
+
+Please note: Add more chunks here if needed!
+
+```{r}
+
+```
+    
+    
+# Importing Data
+
+The dataset is stored here:
+<https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv>
+
+Let us put the URL in an object first, using the assignment operator
+`<-`:
+
+```{r URL}
+# Assign URL of data into object URL
+URL <- "https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv"
+```
+
+Import the data into global environment:
+
+```{r ImportDataset}
+
+```
+   
+You can get a first impression of the importet object using the `head()` or `tail()` functions (and in RStudio `View`):  
+  
+```{r}
+# head will print out the first six cases
+
+```
+
+     
+## Exercises: Importing Data
+
+- Please import the diamonds dataset from
+  <https://raw.githubusercontent.com/tidyverse/ggplot2/main/data-raw/diamonds.csv>
+- Store the dataset in an object called `diamonds`
+   
+   
+# Data Structures in R
+
+R has essentially only two data structures:
+
+1.  vector
+2.  list
+
+But we want to work with a **statistical table**, which contains data
+organized in a specific way:
+
+- In rows are units, like the individual car type
+- In columns are variables, like the average range of a car, price of a car etc.
+- In cells are values
+
+This structure is available in R as a so called `data.frame`. A `data.frame` is a `list` organized in the - described above - specific data structure. The imported data is stored directly into a `data.frame`:
+
+```{r DataStrcuturesInR}
+# We use indexing to print out only a few cases and variables
+
+```
+
+You can see that the data is structured in the above described ways. In
+first row is a Tesla stored, which you can easily find out checking the
+variables `Brand` and `Model` in first and second column. The values
+stored in cells are then `Tesla` and `Model 3 Long Range Dual Motor`.
+You will find more related information stored in other variables like
+`Range_Km` etc.
+
+## Access a single vector (variable)
+
+A single variable in a `data.frame` is an object type called `vector`. A
+vector can be assigned in different ways, one qay is to use the `$`
+sign: first, enter the name of the dataset, followed by the `$` sign,
+followed by the name of the variable: `NameOfDataFrame$VariableName`
+
+```{r}
+# We want to assign the AccelSec variable and calculate the arithmetic mean
+
+```
+
+There are more ways how to access a single variable in R, here are some
+examples (will not discuss them in details now):
+
+```{r}
+# Two more ways to select variables from a list or data.frame
+
+# ...
+```
+   
+   
+   
+## Exercises: Data Structures
+
+- Try to find out, if the imported object `diamonds` (last exercise) is a data.frame? (Hint: Use `str()` or `is.data.frame()` or ...)
+- Access a single vector in the `diamonds` objects, e.g. carat, and calculate the average mean and standard deviation
+
+
+Please note: Add more chunks here if needed!
+
+```{r}
+
+```
+
