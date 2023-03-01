@@ -1,0 +1,434 @@
+---
+title: 'Session 4: ANOVA and Regression Analysis'
+output: html_document
+date: "2023-01-11"
+editor_options: 
+  markdown: 
+    wrap: 100
+always_allow_html: true    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Required packages
+# psych provides correlation matrix and corresponding adjusted p-value matrix 
+library(psych)
+# gplots provides a fast way to draw arithmetic means and confidence intervals by a group variable
+#install.packages("gplots")
+#library(gplots) # remove comment signs first
+# ...
+```
+
+   
+# Data IO
+  
+Import the prepared dataset here. 
+
+```{r URL}
+# Assign URL of data into object URL
+URL <- "https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv"
+# and import the dataset
+ElectricVehicleData <- read.csv(URL)
+```
+   
+   
+# ANOVA and Regression Analysis
+    
+    
+ANOVA (ANalysis Of VAriance), Regression Analysis, t-Test for independent samples etc. are all members of the so called *General Linear Model (GLM)* family. In R, we can run all of these models using the `lm()`-function or some special functions, like `t.test()` for the independent samples t-test or `aov()` functions for the ANOVA.
+   
+We want to discuss here:   
+
+- correlations
+- t-Tests
+- One-factorial ANOVA
+- Regression Analysis (simple and multiple ones)
+   
+   
+# Correlation Analysis
+  
+Especially if you have more than one independent variable it makes sense to check the association between these variables first. If multicollinearity exists, it can negatively impact the trustworthiness of the regression coefficients. 
+    
+    
+The steps in this section can be conducted in the data understanding part as well. 
+    
+    
+## Visualize associations
+  
+We can use a scatterplot matrix (SPLOM) to visualize the associations between a set of interval or ratio scaled variables. There are several functions available to do that, built-in in R are `plot()` and `pairs()`. 
+   
+```{r}
+
+
+```
+We can see some outliers here as well.   
+  
+  
+
+## Correlation coefficients
+
+A correlation matrix can be requested using the `cor()` function. A matrix with corresponding p-values provides the function `corr.test()` in package `psych`. A Bonverroni correction can be applied.
+
+```{r}
+cor(ElectricVehicleData[,c("PriceEuro", "AccelSec", "TopSpeed_KmH")])
+```
+  
+Package `psych` provides p-values. 
+
+
+```{r}
+# p-values
+psych::corr.test(ElectricVehicleData[,c("PriceEuro", "AccelSec", "TopSpeed_KmH")])
+# Adjusted
+corr.p(r = cor(ElectricVehicleData[,c("PriceEuro", "AccelSec", "TopSpeed_KmH")]), n = 103, adjust = "bonferroni")
+```
+
+## Exercise: Correlations
+- Please add the remaining metric variables into the scatterplotmatrix (SPLOM)
+- Please calculate the corresping correlations
+- Please add a categorical variable to get a grouped scatterplot: use the `col =` argument and set `Segment` as parameter.  
+   
+
+# t-Test for independent samples   
+
+A t-Test for two independent samples can be performed with the built-in function `t.test()`.    
+   
+   
+First, visualize the arithmetic means of `PriceEuro` by groups in `RapidCharge` and the corresponding confidence intervals (alpha 5%).  
+  
+```{r}
+gplots::plotmeans(ElectricVehicleData$PriceEuro ~ ElectricVehicleData$RapidCharge, connect = F)
+```
+   
+Note: If the confidence intervals are not overlapping --> H1   
+   
+      
+## Logic
+  
+**Step 1: Hypotheses**
+  
+- H0: 
+- H1: 
+
+   
+**Step 2: alpha and beta levels**
+  
+- alpha-level: 
+- beta-level: 
+
+- 1 - beta --> Power  
+- We will set alpha to 5%, because the risk of rejecting a valid null hypothesis is not very high. 
+- We will set beta to 5% and the Power to 95%
+   
+   
+   
+**Step 3: Test Statistic**
+   
+We want to analyze the influence of `RapidCharge` (independent variable) on `EuroPrice`.
+  
+- `RapidCharge` has two categories.
+- `PriceEuro` has measurement level ratio.
+   
+Apropriate Hypothesis-Test: 
+  
+  
+
+```{r}
+unique(ElectricVehicleData$RapidCharge)
+```
+  
+  
+   
+**Step 4: Calculate p-value**
+
+```{r}
+
+
+```
+
+  
+**Step 5: Decision**
+   
+p-value is ...   
+
+
+
+**Step 6: Interpretation**
+
+Variable `RapidCharge` has - based on the sample and an alpha-level of 5% - an influence on the variable `PriceEuro` in the population.  
+
+
+## Exercise: t-Tests  
+  
+- Please run an independent t-test: Independent variable: `AccelSec`; group variable: `PowerTrain`, categories: `AWD` and `FWD`, please drop `RWD`.
+- Check the distribution of the independent variable and the group variable; 
+- Generate a subset with `AccelSec` and the two relevant categories of `PowerTrain`.  
+- Think about the hypothesis logic: 
+  - Please formulate the hypotheses; 
+  - Describe if the test should be one or two sided; 
+  - Generate the data; 
+  - Run the test; 
+  - Decision and interpretation;  
+  
+  
+```{r}
+# How to get the subset?
+EV_AccelSecPowerTrain <- subset.data.frame(x = ElectricVehicleData, 
+                                           subset = PowerTrain %in% c("AWD", "FWD"), 
+                                           select = c("AccelSec", "PowerTrain"))
+str(EV_AccelSecPowerTrain)
+```
+   
+     
+  
+# One-factorial ANOVA
+
+A one factorial analysis of variance is just an extension of the t-test for two independent groups. Instead of only two independent groups, other number of groups can be taken into consideration. 
+  
+  
+We want to investigate the influence of `BodyStyle` on `PriceEuro`.   
+   
+   
+## Preliminary Steps
+  
+First, let us find out the number of different categories of variable `BodyStyle`
+  
+```{r}
+table(ElectricVehicleData$BodyStyle)
+length(unique(ElectricVehicleData$BodyStyle))
+```
+
+Variable `BodyStyle` has nine different categories. 
+  
+Next, we visualize the arithmetic means of `PriceEuro` by groups in `BodyStyle` and the corresponding confidence intervals (alpha 5%). Note: Some warnings will appear due to the cases with N = 1. We can exclude these cases or combine them into a residual category.   
+   
+
+```{r}
+gplots::plotmeans(ElectricVehicleData$PriceEuro ~ ElectricVehicleData$BodyStyle, connect = F)
+```
+  
+## One-factorial ANOVA  
+  
+  
+Now, we conduct an one-factorial analysis of variance using the `aov()`-function. Alternatively, the `lm()` function can be used.  
+  
+  
+```{r}
+ANOVA <- 
+  
+  
+```
+
+Decision: The p-value is below alpha (5%), so that we can reject H0 in favor of H1. At least two groups have different arithmetic means in the population. But which groups have different means? To find that out, we can conduct so called *post-hoc-tests*.       
+
+
+## Post-Hoc-Tests
+  
+Post-hoc-tests can be conducted using the `pairwise.t.test()` and/or `TukeyHSD()` function with Bonferroni correction for multiple testing. 
+   
+```{r}
+TukeyHSD(ANOVA)
+```
+  
+  
+## Exercise: One-factorial ANOVA
+   
+- Please run an one-factorial ANOVA: Independent variable: `AccelSec`; group variable: `PowerTrain` with all categories: `AWD`, `FWD` and `RWD`.
+- Plot the group means and corresponding confidence-intervals;
+- Think about the hypothesis logic:   
+  - Please formulate the hypotheses; 
+  - Describe if the test should be one or two sided; 
+  - Generate the data; 
+  - Run the test; 
+  - Decision and interpretation;  
+- Run post-hoc-tests to find out, which groups have significant mean-differences. Don't forget the Bonferroni correction.
+   
+      
+# Simple Linear Regression Analysis
+  
+In a linear regression analysis, we can incorporate all kinds of independent variables (by measurement level). 
+   
+   
+> DependentVariable = f(IndependentVariables) + Error
+   
+   
+**Parametrization:**  
+
+- The dependent variable has measurement level interval or ratio
+- f() is linear
+- The error follows a normal distribution
+   
+In R, function `lm()` is available for linear regression models.   
+ 
+
+Typical research question: Is there a significant influence of `Range_Km` on `PriceEuro`? (*Do I have to pay more for a wider range?*)  
+
+## Preliminary steps / Data Understanding
+
+Of course, hypotheses formulation. Please proceed as shown above. 
+  
+Visualization of both variables (histograms/density plots) and of the association of both variable (simple scatterplot)  
+
+```{r, figures-side2, fig.show="hold", out.width="50%"}
+hist(ElectricVehicleData$Range_Km, col = "blue", freq = F) 
+lines(density(ElectricVehicleData$Range_Km), lwd = 1.5)
+hist(ElectricVehicleData$PriceEuro, col = "red", freq = F)
+lines(density(ElectricVehicleData$PriceEuro), lwd = 1.5)
+```
+  
+```{r}
+plot(x = ElectricVehicleData$Range_Km, 
+     y = ElectricVehicleData$PriceEuro, pch = 18, col = "darkgrey")
+```
+  
+## Run the simple linear regression   
+  
+```{r}
+
+
+
+```
+
+Draw the estimated ab-line into the scatterplot:   
+  
+```{r}
+plot(x = ElectricVehicleData$Range_Km, y = ElectricVehicleData$PriceEuro, pch = 18, col = "darkgrey")
+# abline()
+
+```
+
+## Diagnostics
+
+### Distribution of residuals
+
+```{r}
+
+```
+  
+  
+Long tail on the right - prediction quality for pairs > 2 is low. One can take into consideration to log-transform the model variables.  
+  
+
+### Outlier: Influential pairs
+
+```{r}
+plot(SimpleLinearRegression, 4)
+```
+   
+   
+```{r}
+# print first five cooks distance values - sorted by strength
+sort(cooks.distance(SimpleLinearRegression), decreasing = T)[1:5] 
+```
+Values above 1 are described as influential (Cook & Weisenberg, 1982). All values are below 1, so there are no influential cases.  
+  
+
+
+## Exercise: Simple Linear Regression
+   
+- You want to analyze the influence of `PriceEuro` on `TopSpeed_KmH`: If you pay more, can you drive faster?  
+- Analyze both variables first
+- Please perform a simple linear regression analysis in R
+- Check the result using the `summary()` function
+- Estimate the standardized regression coefficients using the `lm.beta()` function from `lm.beta` package
+- Resiudal Analysis: Plot the residuals
+- Outlier Analysis: Plot a chart showing Cook's distance
+- Draw a scatterplot and insert the regression line using the `abline()` function
+- Please interpret the results
+- Decide, if you want to run the analysis again, maybe with transformed input variables, excluded outliers etc.
+  
+  
+
+# Multiple linear regression analysis   
+  
+## Basic setup in R
+  
+We can easily integrate more independent variables in the linear model. Independent variables will be combined by a plus `+` sign. Next to so called main-effects, interaction effects could be integrated as well, using the `:` sign.   
+  
+```{r}
+# Multiple linear regression analysis: more than one independent variable
+
+
+
+
+```
+
+Interpretation: Based on the model we can explain approx. 69.8% of the variation in the target variable `PriceEuro`.  
+  
+  
+
+## Standardized Regression coefficients
+
+The `lm.beta` package can be used to get standardized regression coefficients, function: `lm.beta()`   
+  
+```{r}
+# lm.beta()
+
+```
+Interpretation: `TopSpeed_KmH` has the strongest influence on `PriceEuro`. 
+
+
+## Diagnostics
+  
+All other steps are the same:
+- Check the asumptions, especially distribution of residuals
+- Check for outliers
+- Rerun the model based on a modified input data set. 
+   
+
+### Distribution of residuals
+  
+```{r}
+hist(scale(MyFirstMultipleLinearRegressionAnalysis$residuals), col = "orange")
+```
+   
+   
+  
+### Outlier: Influential cases
+
+```{r}
+plot(MyFirstMultipleLinearRegressionAnalysis, 4)
+``` 
+   
+Interpretation: There is a least one influential case, number #49. The other two cases are below 1.
+  
+```{r}
+ElectricVehicleData[49,]
+```
+
+The case could be excluded and the analyses run again:
+
+```{r}
+# Exclude the case and rerun
+ElectricVehicleData_WithoutOutlier <- ElectricVehicleData[-49,]
+dim(ElectricVehicleData_WithoutOutlier)
+```
+
+Rerun the multiple linear regression analysis:  
+  
+```{r}
+# Multiple linear regression analysis: more than one independent variable
+MyFirstMultipleLinearRegressionAnalysis <- lm(PriceEuro ~ Range_Km + AccelSec + TopSpeed_KmH, 
+                                              data = ElectricVehicleData_WithoutOutlier) 
+summary(MyFirstMultipleLinearRegressionAnalysis)
+```
+   
+Interpretation: The outlier has a negative influence on R²! After reducing the outlier, R² goes up to approx. 78%. 
+  
+
+## Exercise: Multiple Linear Regression
+   
+- You want to explain the `PriceEuro`. Please add at least five variables into the regression analysis. You can also add dummy variables. 
+- Analyze the variables first;
+- Please perform a multiple linear regression analysis in R
+- Check the result using the `summary()` function
+- Estimate the standardized regression coefficients using the `lm.beta()` function from `lm.beta` package
+- Resiudal Analysis: Plot the residuals
+- Outlier Analysis: Plot a chart showing Cook's distance
+- Please interpret the results
+- Decide, if you want to run the analysis again, maybe with transformed input variables, excluded outliers etc.
+  
+ 

@@ -1,0 +1,463 @@
+---
+title: 'Session 3: Data Preparation'
+output: html_document
+date: "2023-01-11"
+editor_options: 
+  markdown: 
+    wrap: 100
+always_allow_html: true    
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Required packages: ...
+
+
+# Dummy-Coding
+
+
+```
+
+# Data IO
+  
+New RMarkdown document, data has to be imported again.
+  
+```{r URL}
+# Assign URL of data into object URL
+URL <- "https://raw.githubusercontent.com/gmoeser/R-lectures/master/ElectricCarData_Clean.csv"
+# and import the dataset
+ElectricVehicleData <- read.csv(URL)
+```
+   
+   
+
+
+# Data Preparation
+   
+After inspection the data, some work on the data could be necessary:   
+
+- **Missing values**, represented by `NA` in R, should be treated adequatly. Some functions cannot handle missing values, other functions (`lm()`) will delete missing values in a listwise manner. Other functions, like `cor()` offer some ways to handle missing values.
+- **Outliers**: Outliers can be deleted or replaced by a meaningful value; Sometimes outliers in linear regression will influence the regression equation and - even worse - the p-values. There are ways to detect such - bad leverage - points.
+- **Unplausible values** should be excluded (example: as far as I know, there are no humans with age 963 years... - could be a typo or anything else)
+- **Standardization**: Especially in cluster analysis all variables should have the same range. Just take the range of age and income. If both variables are used to calculate the Euclidean distance, income will dominate age. To prevent that, both variables should be standardized before. There are different methods available, one of the most often applied one is the `z-standardisation`. R provides the `scale()` function for that purpose.
+- **Distributions**: In case of linear regression - and other methods - residuals should follow a normal distribution. If this is not the case, a transformation of input variables could be useful (see also Box-Cox-Regression)
+- Sometime it is useful to do some **tranformations** of the input variables. For example, you want to calculate the price elasticity. Then a log-log-transformation of price and quantity makes sense. 
+- **Contrasts/Dummy Coding**: Especially categorical unordered variables with more than two categories cannot be included in a multivariate analysis. First, the variable has to be transformed in so called contrast variables. Here, every category is a new variable. One category will be left out, the so called contrast. 
+- ...
+  
+
+# Missing Values
+  
+There are different ways how to handle missing values:  
+  
+- Cases with missing values can be excluded. Major disadvantage: costly! We can use lots of cases and, even worse, if this happens not in a random way, we get distortions afterwards in the analyses!   
+- Missing values can be replaced. There are simple methods available, like mean oder median substition and very sophisticated methods, like single and multiple imputation. One interesting package is `Amelia` (by Gary King/Harvard, https://gking.harvard.edu/amelia), a program for missing data. This package has also a graphical user interface (but be careful in RMarkdown documents!)
+   
+   
+   
+## Identify any missing values in variables (in a dataset) 
+
+Generate a variable with some missing values. Please note: missing values in R are represented by `NA`     
+   
+```{r}
+
+
+```
+The function `is.na()` identifies if a value is missing. It returns `TRUE`, if a value is missing, `FALSE` if a value is not missing. It can be applied to every variable and will return a vector consisting of `TRUE` and `FALSE`. 
+   
+   
+```{r}
+# Example: Missing values in a single variable?
+
+```
+     
+To get a better overview, let us generate a frequency table:
+  
+```{r}
+
+
+```
+So we have 3 missing values (`TRUE`). We can calculate the relative proportion using `prop.table` 
+  
+```{r}
+
+```
+37.5% of the cases in the variable are missing values.   
+  
+
+### Exercises: Missing Values in a variable
+
+Please count the number of missing values using `table(is.na())` in first variable in dataset `airquality`:
+- Open the help page of the dataset `airquality`
+- Check if the first variable has missing values? If so, what are the absolute and relative frequencies of missing and valid values?
+   
+  
+## Apply missing values on a complete data.frame
+   
+   
+Let us now apply the `table(is.na())` function on the whole dataset using a loop: 
+  
+```{r}
+
+```
+There are no missing values in the dataset. 
+
+     
+### Exercises: Missing Values
+
+Please count the number of missing values using `table(is.na())` in dataset `airquality`
+
+   
+  
+## Replace missing values in a vector 
+  
+Missing values can easily be replaced by the arithmetic mean or median. But be careful, these methods are problematic if missings are not randomly generated and if the amount of missing values is > 5% (Schafer & Graham, 2002).   
+  
+In the example, missing values will be replaced by the arithmetic mean:
+  
+```{r}
+# Rpelace missing values by arithmetic mean
+# Generate a vector with missing values
+VectorWithNA <- c(3, NA, 4.5, 7.0, 3.6, NA, NA, 9, 10)
+VectorWithNA
+# Replace
+
+
+```
+This can easily applied to a data.frame:  
+  
+```{r}
+# data.frame with NAs
+DataFrameWithNA <- data.frame(Variable1 = c(3, NA, 4.5, 7.0, 3.6, NA, NA, 9, 10), Variable2 = c(7, 3, NA, 4, 2.1, 3, 7, NA, 4.3))
+DataFrameWithNA
+# Replace in data.frame
+DataFrameWithNA$Variable1[is.na(DataFrameWithNA$Variable1)] <- mean(DataFrameWithNA$Variable1, na.rm = TRUE)
+DataFrameWithNA
+```
+
+### Exercises: Replace missing values
+
+- Replace NAs in the `Variable2` in the data.frame in the example with the `median`
+- Question: What happens if you replace the missing values in the first two variables in the `airquality` data.frame with the `mean` or `median`? Please replace the NAs in the first variable and then plot the variable using the `plot()` command with option `type = "l"` (`l` --> lineplot).  
+  
+  
+
+# Outliers and unplausible values
+  
+Outliers can have a negative impact on moment based statistical parameters, like the arithmetic mean, standard deviation or regression analysis, to name only a few. Outliers will typically not have a huge impact on percentile-based statistics, like median or interquartile-range (IQR).  
+  
+  
+Outliers are values which we would not expect under a theoretical distribution, like the normal or t-distributions, depending on the measurement level and other parameters.  
+   
+Outliers and unplausible values can be detected applying different approaches:
+- Visually: Plot the frequency distribution of a variable; 
+- Apply a theoretical distribution to identify outliers, like the standard normal distribution
+- Add some rules to find out if there are unplausible values, e.g. count the number of values in age below 0 and above, let's say, 120. 
+  
+      
+## Visual detection of outliers: Boxplots 
+  
+Outliers are defined as 
+- Values above P75 + 1.5*IQR
+- Values below P25 - 1.5*IQR
+   
+   
+These values will be marked by a dot (outliers) or a star (extreme outliers). Please note, that the underlying distribution must be a symetric one. 
+   
+
+```{r, figures-side, fig.show="hold", out.width="50%"}
+
+
+```
+
+
+To find the outlier, estimate the percentiles using the `quantile()` function:  
+
+
+```{r}
+# Values below P25 - 1.5*IQR are outliers
+ThresholdOutliersP25 <- quantile(x = ElectricVehicleData$Range_Km, probs = c(0.25)) - 1.5*IQR(ElectricVehicleData$Range_Km) 
+# Values above P75 + 1.5*IQR are outliers
+ThresholdOutliersP75 <- quantile(x = ElectricVehicleData$Range_Km, probs = c(0.75)) + 1.5*IQR(ElectricVehicleData$Range_Km) 
+ThresholdOutliersP75
+#  Print out all outliers
+ElectricVehicleData[ElectricVehicleData$Range_Km >= ThresholdOutliersP75 | 
+                      ElectricVehicleData$Range_Km <= ThresholdOutliersP25 ,]
+
+```
+
+
+### Exercise: Boxplot
+   
+- Check two variables of your choice in the electric vehicles dataset for outliers;
+- How could you find the outliers in the dataset?
+   
+   
+   
+
+## Visual detectionof outliers: Histogram ( Density Plot) 
+  
+Here, we can apply the standard normal distribution if the underlying distribution is assumed to follow a normal distribution:
+- We expect approx. 5% of cases above 2 in absolute values
+- We expect approx. 0.1% of cases above 3 in absolute values  
+  
+  
+```{r, figures-side1, fig.show="hold", out.width="50%"}
+hist(scale(ElectricVehicleData$Range_Km), col = "blue") 
+abline(v = c(-3, -2, 2, 3), lwd = 1.5, lty = 2)
+# Not an underlying symetrical distribution
+hist(scale(ElectricVehicleData$AccelSec), col = "red")
+# abline
+
+```  
+
+   
+### Exercise: Outlier detection in a Histogram
+   
+- Draw a histogram of variable `PriceEuro` in ElectricVehicle dataset. 
+- Insert vertical lines for +/ 2 Standard deviations and +/- 3 standard deviations;
+- How many values are outside +/ 2 Standard deviations and +/- 3 standard deviations;
+   
+   
+   
+## Identifying outliers and unplausible values
+    
+    
+It is not necessary or wise to delete all outliers. It makes more sense to check the influence of the outliers:   
+- Sensitivity analysis: Run the arithmetic mean with and without the outliers and compare the results
+- Robust statistical parameters: Calculate arithmetic mean and median and compare both
+- Regression Analysis: Calculate Cooks distance and other measures to find out about the influence of a value
+- ...   
+   
+   
+Please note: Please describe the process of deleting outliers in the data as open as possible, otherwise it can be treated as data manipulation!      
+
+**Sensitivity analysis:**
+```{r}
+# Sensitivity analysis
+# All cases
+mean(ElectricVehicleData$Range_Km)
+# Values below and above 2 SD deleted
+
+
+```
+
+
+**Robust statistical parameters:**   
+```{r}
+# Robust statistical parameters
+# All cases
+
+# Median
+
+```
+Outlier handling in linear regression analysis: see session *regression analysis*.
+
+
+### Exercise: Outlier detection
+   
+- Calculate the arithmetic mean and median variable `AccelSec`. Compre both
+- Calculate the arithmetic mean and the arithmetic mean with values inbetween two standard deviations
+   
+   
+## Excluding outliers and unplausible values
+
+If an outlier and/or unplausible value should be excluded, it has two consequences:
+- single variable analysis: the case in the vector outside the data.frame has to be excluded
+- multivariate analyses / hypotheses testing: the complete case has to be excluded from the data.frame
+    
+    
+**Exclude from a single variable:**
+  
+```{r}
+# Example: Exclude the two outliers in the Range_Km variable
+sort(ElectricVehicleData$Range_Km) # we want to exclude the values 750 and 970
+# Copy the variable into a new object - the data.frame should not be manipulated
+# Use subset - it is faster and more understandable
+Range_km_WithoutTwoOutliers <- ElectricVehicleData$Range_Km[ElectricVehicleData$Range_Km < 750]
+sort(Range_km_WithoutTwoOutliers) # we can now go ahead with the cleaned variable
+
+# subset():
+
+```
+
+**Exclude from a data.frame**
+   
+      
+```{r}
+dim(ElectricVehicleData)
+ElectricVehicleDataWithoutOutliers <- ElectricVehicleData[ElectricVehicleData$Range_Km < 750,]
+dim(ElectricVehicleDataWithoutOutliers)
+# Use subset to generate a new dataset and proceed with analyses
+```
+The new dataset `ElectricVehicleDataWithoutOutliers` has now 101 cases and can be used for further analyses.
+
+
+   
+   
+# Standardization of input variables
+  
+Some multivariate statistical methods require the input variables to be on the same range. This can be established in different ways, one of the most often used ones is to standardize a variable with mean = 0 and standard devation transformed to 1. The method is called z-standardization. R provides the function `scale()` to establish it. 
+   
+**Transforming a single variable: z-standardization**
+  
+```{r}
+# Transforming a single variable
+# We will add a prefix z and add the variable to the data.frame
+ElectricVehicleData$zAccelSec <- 
+
+# Generate a vector to validate  
+c(Mean = round(mean(ElectricVehicleData$zAccelSec),1), SD = round(sd(ElectricVehicleData$zAccelSec),1))
+```
+**Transforming a set of variables: z-standardization**
+   
+Step 1: Select the variables and set the new variable names:
+     
+```{r}
+# Select variable names
+NumInputVariables <- c("AccelSec", "TopSpeed_KmH", "Range_Km", "Efficiency_WhKm", "Seats", "PriceEuro")
+# Define name of output variables
+NumOutputVariables <- paste0("z", NumInputVariables)
+# print
+NumOutputVariables
+```
+   
+   
+Step 2: Transform the variables and write back into existing data.frame
+   
+```{r}
+# Transform
+for (i in 1:length(NumInputVariables)) {
+ ElectricVehicleData[,NumOutputVariables[i]] <- scale(ElectricVehicleData[,NumInputVariables[i]])  
+}
+```
+   
+   
+Step 3: Validate the results
+   
+```{r}
+# Validate
+sapply(X = NumOutputVariables, FUN = function(x) {
+  c(Mean = round(mean(ElectricVehicleData[,x]),1), SD = round(sd(ElectricVehicleData[,x]),1))})
+```
+
+
+## Exercises: Data Preparation
+
+- Perform a z-transformation on a variable of your choice. Validate the results - calculate the arithmetic mean and standard devation. 
+   
+   
+   
+# Distributions and Transformations
+  
+We can change a distribution using different transformation functions, like the `log` or `1/x` etc.   
+  
+A typical candidate are price variables. Next example shows the price before and after transformation. Please note that no negative or zero values are allowed, if a log-transformation should be applied. 
+  
+```{r, figures-side2, fig.show="hold", out.width="50%"}
+hist(ElectricVehicleData$PriceEuro, col = "blue") 
+# A log-transformation
+
+```  
+
+
+The transformed variable can be written back to the data.frame. Use a prefix like `ln` for example.
+   
+```{r}
+# Write the transformed variable back to the data.frame: prefix ln
+
+```
+   
+## Exercise: Distributions and Transformations
+   
+Perform a log-transformation on a variable of your choice. Use a prefix `ln` if you want to write the transformed variable back to the dataset. 
+   
+   
+   
+   
+# Contrasts/Dummy Coding
+
+Some multivariate functions, like linear regression (function `lm()`) will do the dummy coding for you. Other functions are not supporting that. So it could be necessary to perform a so called dummy coding. 
+   
+   
+Only categorical scaled variables with more than two categories should be dummy coded. So the first step is to find out the number of different categories of a categorical scaled variable.    
+  
+Step 1: Identify all character variables in the data.frame:  
+    
+```{r}
+CharacterVariables <- colnames(ElectricVehicleData)[sapply(X = ElectricVehicleData, is.character)]
+CharacterVariables
+```
+  
+Step 2: Find the number of unique categories in each variable
+```{r}
+sapply(X = CharacterVariables, FUN = function(x) length(unique(ElectricVehicleData[,x])))
+```
+Only the variable RapidCharge has two unique values, all other variables have more than two variables.   
+  
+## How dummy coding works  
+
+The idea is to transform categorical / character variables into values, which than can be used in design matrices etc. in statistical models. Example: `PowerTrain` variable in dataset. It has three different values: `AWD`, `RWD` and `FWD`. The values are stored in a character variable. Instead of a single character variable `PowerTrain` three new variables will be generated: `PowerTrain_AWD`, `PowerTrain_RWD` and `PowerTrain_FWD`. The new variables will have the value 1 if it is the category and 0 if it is another category.
+   
+   
+
+|PowerTrain |PowerTrain_AWD |PowerTrain_RWD |PowerTrain_FWD |
+|-----------|:-------------:|:-------------:|:-------------:|
+| "AWD"     | 1             | 0             | 0             |
+| "RWD"     | 0             | 1             | 0             |
+| "AWD"     | 1             | 0             | 0             |
+| "RWD"     | 0             | 1             | 0             |
+| "RWD"     | 0             | 1             | 0             |
+| "AWD"     | 1             | 0             | 0             |
+| "FWD"     | 0             | 0             | 1             |
+| "..."     | ...           |               |               |
+  
+    
+  
+## Dummy coding using the package `fastDummies`
+    
+Instead of using a built-in method, we will use the `fastDummies` packages, which is much more convenient. Please install and load the package first.   
+  
+```{r}
+# we will use only one variable here, PowerTrain
+ElectricVehicleData <- 
+
+# PowerTrain will be used as Prefix
+ElectricVehicleData[1:10,c("PowerTrain", "PowerTrain_AWD", "PowerTrain_FWD", "PowerTrain_RWD")]
+```
+
+Please note: If more than one variable should be transformed, just add a vector with the variable names in the `select_columns` argument.   
+   
+
+## Exercise: Dummy Coding  
+  
+Please transform two categorical variables of your choice into dummy variables. 
+   
+   
+  
+# After the work is done: save the data.frame!
+  
+Save the final analysis data.frame and import it in the next RMarkdown documents. You can also upload the data.frame in a database or whatever.
+   
+```{r}
+# Please don't use tempdir()!
+# tempdir() folder will be deleted after the R session is closed.
+# Just select another folder on your system
+write.csv(x = ElectricVehicleData, file = paste0(tempdir(), "\\ElectricVehicleData_AnalysisDF.csv"))
+```
+
+   
+    
+
+## Exercises: Save the final analysis data.frame
+
+Save the final analysis data.frame
+
+
+
+
+
+
